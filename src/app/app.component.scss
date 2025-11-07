@@ -2,7 +2,7 @@
   width: 100vw;
   height: 100vh;
   background-color: var(--bg);
-  background-image: url("../assets/images/background-purple-new-year.png");
+  background-image: url("../assets/images/wuvLiWLzl8.png");
   background-size: cover;
   background-position: center;
   display: flex;
@@ -12,7 +12,10 @@
 
 .main {
   display: flex;
-  background: rgba(255, 255, 255, 0.2);
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  background: rgba(255, 255, 255, 0.3);
   border-radius: 8px;
   box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
   backdrop-filter: blur(20px);

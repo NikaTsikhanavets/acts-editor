@@ -1,6 +1,7 @@
 <main class="main">
-  <app-file-uploader *ngIf="!excelDocument; else driversList" (uploadedFile)="excelDocument = $event"></app-file-uploader>
-  <ng-template #driversList>
-    <app-drivers-list [uploadedDocument]="excelDocument" (goBack)="excelDocument = undefined"></app-drivers-list>
-  </ng-template>
+  @if (!excelDocument) {
+    <app-file-uploader (uploadedFile)="excelDocument = $event"/>
+  } @else {
+    <app-drivers-list [uploadedDocument]="excelDocument" (goBack)="excelDocument = undefined"/>
+  }
 </main>

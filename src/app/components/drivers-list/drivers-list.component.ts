@@ -1,13 +1,32 @@
-import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  EventEmitter,
+  Input,
+  OnInit,
+  Output,
+  signal,
+  WritableSignal
+} from '@angular/core';
 import * as XLSX from 'xlsx';
 import { DocumentService, ExcelParserService } from '@services';
 import { Driver, Executor } from '@models';
 import { ErrorInfo } from '../../interfaces/error-info.interface';
+import { ErrorsComponent } from '@components/errors/errors.component';
+import { LoaderComponent } from '@components/loader/loader.component';
+import { NgTemplateOutlet } from '@angular/common';
 
 @Component({
   selector: 'app-drivers-list',
   templateUrl: './drivers-list.component.html',
-  styleUrls: ['./drivers-list.component.scss']
+  styleUrls: ['./drivers-list.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [
+    ErrorsComponent,
+    LoaderComponent,
+    NgTemplateOutlet,
+  ],
+  standalone: true
 })
 export class DriversListComponent implements OnInit {
   @Input() uploadedDocument!: XLSX.WorkBook | undefined;
@@ -19,8 +38,8 @@ export class DriversListComponent implements OnInit {
   public executors: {[key: string]: Executor} = {};
   public driversByManager: {[key: string]: Driver[]} = {};
   public selectedDrivers: string[] = [];
-  public isSuccessGenerated: boolean = false;
-  public inProgress: boolean = false;
+  public isSuccessGenerated: WritableSignal<boolean> = signal(false);
+  public inProgress: WritableSignal<boolean> = signal(false);
   public parsingErrors: ErrorInfo[] = [];
   public isEmptyRequests: boolean = false;
 
@@ -35,7 +54,7 @@ export class DriversListComponent implements OnInit {
     const {drivers, managers, clients, executors, errors} = this.parserService.parseDocument(this.uploadedDocument);
 
     if (errors?.length) {
-      this.parsingErrors = errors;
+      this.parsingErrors = errors || [];
       return;
     }
 
@@ -66,24 +85,24 @@ export class DriversListComponent implements OnInit {
       return;
     }
 
-    this.inProgress = true;
+    this.inProgress.set(true);
     const drivers: {[key: string]: Driver} = {};
     this.drivers
       .filter((driver: Driver) => this.selectedDrivers.includes(driver.shortName))
       .forEach((driver: Driver) => drivers[driver.shortName] = driver);
 
     const items = this.parserService.getRequests(this.uploadedDocument, drivers, this.clients, this.executors);
-    this.parsingErrors = this.parserService.documentErrors;
+    this.parsingErrors = this.parserService.documentErrors || [];
 
-    if (this.parsingErrors?.length || !items?.length) {
-      this.inProgress = false;
+    if (this.parsingErrors.length || !items?.length) {
+      this.inProgress.set(false);
       this.isEmptyRequests = !items?.length;
       return;
     }
 
     this.documentService.createActs(items).then(() => {
-      this.isSuccessGenerated = true;
-      this.inProgress = false;
+      this.isSuccessGenerated.set(true);
+      this.inProgress.set(false);
     });
   }
 
@@ -93,6 +112,14 @@ export class DriversListComponent implements OnInit {
     Object.keys(this.driversByManager).forEach((key: string) => {
       this.selectedDrivers.push(...this.driversByManager[key].map((driver: Driver) => driver.shortName));
     })
+  }
+
+  public deselectAllDrivers(): void {
+    this.selectedDrivers = [];
+  }
+
+  public isAllDriversSelected(): boolean {
+    return this.drivers?.length === this.selectedDrivers?.length;
   }
 
   public updateSelectedDriversByManager(manager: string, target: EventTarget | null): void {

@@ -7,7 +7,8 @@ export interface FileHandle {
 }
 
 @Directive({
-  selector: '[appDrop]'
+    selector: '[appDrop]',
+    standalone: true
 })
 export class DropDirective {
   @Output() files: EventEmitter<FileHandle> = new EventEmitter();

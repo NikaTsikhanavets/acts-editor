@@ -1,4 +1,4 @@
-<ng-container *ngIf="!inProgress; else loaderTemplate">
+@if (!inProgress) {
   <div class="drop-zone" appDrop (files)="importFile($event.file)">
     <p>Перетащите файл сюда</p>
     <p>или</p>
@@ -11,8 +11,6 @@
       <button (click)="loadFileByUrl()">Загрузить файл по ссылке</button>
     </div>
   </div>
-</ng-container>
-
-<ng-template #loaderTemplate>
-  <app-loader></app-loader>
-</ng-template>
+} @else {
+  <app-loader/>
+}

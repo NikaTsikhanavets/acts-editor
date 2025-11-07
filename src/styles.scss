@@ -1,6 +1,6 @@
-@import './assets/styles/colors';
-@import './assets/styles/button';
-@import './assets/styles/custom-scrollbar';
+@use './assets/styles/colors';
+@use './assets/styles/button';
+@use './assets/styles/custom-scrollbar';
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@200;300;400;600&display=swap');
 
 *, *::before, *::after {

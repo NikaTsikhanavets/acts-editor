@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import * as XLSX from 'xlsx';
-import * as PizZip from 'pizzip';
-import * as JSZip from 'jszip';
+import PizZip from 'pizzip';
+import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
 import { TemplateService } from './template.service';
 import { RequestInfo } from '@models';

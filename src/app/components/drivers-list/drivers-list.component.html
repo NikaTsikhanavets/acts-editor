@@ -1,66 +1,71 @@
-<ng-container *ngIf="!inProgress; else loaderTemplate">
-  <ng-container *ngIf="!isSuccessGenerated; else successStep">
+@if (inProgress()) {
+  <app-loader class="loader"/>
+} @else {
+  @if (isSuccessGenerated()) {
+    <div class="success">
+      <p>Документы сгенерированы успешно!</p>
+      <ng-container *ngTemplateOutlet="backButton"></ng-container>
+    </div>
+  } @else {
+    @if (parsingErrors.length) {
+      <app-errors [errors]="parsingErrors"
+                  (return)="return()">
+      </app-errors>
+    } @else {
+      @if (isEmptyRequests) {
+        <div class="error-message">
+          <h2>Строк с пометкой "Готовность актов" - "не созданы" не найдено</h2>
 
-    <app-errors *ngIf="parsingErrors?.length; else listStep"
-                [errors]="parsingErrors"
-                (return)="return()">
-    </app-errors>
+          <ng-container *ngTemplateOutlet="backButton"></ng-container>
+        </div>
+      } @else {
+        @if (isAllDriversSelected()) {
+          <button class="secondary" (click)="deselectAllDrivers()">Сбросить все</button>
+        } @else {
+          <button class="secondary" (click)="selectAllDrivers()">Выбрать все</button>
+        }
 
-    <ng-template #listStep>
-      <ng-container *ngIf="!isEmptyRequests; else emptyDataTemplate">
-        <button class="secondary" (click)="selectAllDrivers()">Выбрать все</button>
-
-        <div class="manager" *ngFor="let manager of managers; let index = index">
-          <label class="container manager-name" *ngIf="driversByManager[manager]?.length">
-            {{manager}}
-            <input type="checkbox" [checked]="checkIsSelectedManager(manager)"
-                   (change)="updateSelectedDriversByManager(manager, $event.target)">
-            <span class="checkmark"></span>
-          </label>
-          <div class="drivers">
-            <span *ngFor="let driver of driversByManager[manager]; let index = index">
-              <label class="container">
-                {{driver.fullName}}
-                <input type="checkbox" [checked]="checkSelected(driver)"
-                       (change)="updateSelectedDriversByDriver(driver.shortName, $event.target)">
+        @for (manager of managers; track manager) {
+          <div class="manager">
+            @if (driversByManager[manager]?.length) {
+              <label class="container manager-name">
+                {{manager}}
+                <input type="checkbox" [checked]="checkIsSelectedManager(manager)"
+                       (change)="updateSelectedDriversByManager(manager, $event.target)">
                 <span class="checkmark"></span>
               </label>
-            </span>
+            }
+
+            <div class="drivers">
+              @for (driver of driversByManager[manager]; track driver) {
+                <span>
+                <label class="container">
+                  {{driver.fullName}}
+                  <input type="checkbox" [checked]="checkSelected(driver)"
+                         (change)="updateSelectedDriversByDriver(driver.shortName, $event.target)">
+                  <span class="checkmark"></span>
+                </label>
+              </span>
+              }
+            </div>
           </div>
+        }
+
+        <div class="actions">
+          <ng-container *ngTemplateOutlet="backButton"></ng-container>
+          <button class="generate-button"
+                  [disabled]="!selectedDrivers.length"
+                  (click)="generateDocs()">
+            Сгенерировать документы
+          </button>
         </div>
+      }
+    }
+  }
+}
 
-        <button class="generate-button"
-                [disabled]="!selectedDrivers.length"
-                (click)="generateDocs()">
-          Сгенерировать документы
-        </button>
-      </ng-container>
-
-    </ng-template>
-
-  </ng-container>
-</ng-container>
-
-<ng-template #successStep>
-  <div class="success">
-    <p>Документы сгенерированы успешно!</p>
-    <button (click)="return()">
-      Вернуться к загрузке файла
-    </button>
-  </div>
-</ng-template>
-
-<ng-template #emptyDataTemplate>
-  <div class="error-message">
-    <h2>Строк с пометкой "Готовность актов" - "не созданы" не найдено</h2>
-
-    <button (click)="return()">
-      Вернуться к загрузке файла
-    </button>
-  </div>
-
-</ng-template>
-
-<ng-template #loaderTemplate>
-  <app-loader class="loader"></app-loader>
+<ng-template #backButton>
+  <button (click)="return()">
+    Вернуться к загрузке файла
+  </button>
 </ng-template>

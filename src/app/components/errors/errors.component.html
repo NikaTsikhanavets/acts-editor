@@ -9,13 +9,18 @@
     </tr>
   </thead>
   <tbody>
-    <tr *ngFor="let error of errors; let index = index">
-      <td>{{error.sheetName}}</td>
-      <td>{{error.rowId}}</td>
-      <td>
-        <p *ngFor="let item of error.emptyColumns; let index = index">{{item}}</p>
-      </td>
-    </tr>
+    @for (error of errors; track error) {
+      <tr>
+        <td>{{error.sheetName}}</td>
+        <td>{{error.rowId}}</td>
+        <td>
+          @for (item of error.emptyColumns; track item) {
+            <p>{{item}}</p>
+          }
+        </td>
+      </tr>
+    }
+
   </tbody>
 </table>
 

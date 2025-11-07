@@ -2,9 +2,9 @@
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  justify-content: center;
   width: 70vw;
   gap: 30px;
+  margin: auto 0;
 
   .error-message {
     display: flex;
@@ -32,9 +32,18 @@
   }
 }
 
-.generate-button {
-  align-self: flex-end;
+.actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
   margin-top: 20px;
+
+  button:not(.generate-button) {
+    background: inherit;
+    border: 2px solid var(--primary);
+    color: var(--primary);
+  }
 }
 
 .success {

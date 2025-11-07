@@ -1,11 +1,19 @@
-import { Component, EventEmitter, Output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, EventEmitter, Output } from '@angular/core';
 import * as XLSX from 'xlsx';
 import { DocumentService } from '@services';
+import { LoaderComponent } from '@components/loader/loader.component';
+import { DropDirective } from '../../drop.directive';
 
 @Component({
   selector: 'app-file-uploader',
   templateUrl: './file-uploader.component.html',
-  styleUrls: ['./file-uploader.component.scss']
+  styleUrls: ['./file-uploader.component.scss'],
+  imports: [
+    LoaderComponent,
+    DropDirective
+  ],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  standalone: true
 })
 export class FileUploaderComponent {
   public excelDocument!: XLSX.WorkBook;
