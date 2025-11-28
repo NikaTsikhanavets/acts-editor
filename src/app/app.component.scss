@@ -2,7 +2,7 @@
   width: 100vw;
   height: 100vh;
   background-color: var(--bg);
-  background-image: url("../assets/images/wuvLiWLzl8.png");
+  background-image: url("../assets/images/background-purple.jpg");
   background-size: cover;
   background-position: center;
   display: flex;
@@ -22,7 +22,7 @@
   -webkit-backdrop-filter: blur(20px);
   border: 1px solid rgba(255, 255, 255, 0.3);
   padding: 30px;
-  max-height: calc(100vh - 100px);
+  max-height: calc(100vh - 50px);
   overflow-y: auto;
   overflow-x: hidden;
   min-height: 300px;

@@ -1,0 +1,92 @@
+<div class="pdf-viewer-container">
+  @if (isLoading) {
+    <app-loader/>
+  } @else {
+    <div class="top-bar">
+      <button class="back-btn" (click)="goBack.emit()">← Назад</button>
+    </div>
+
+    <div class="stamp-selector">
+      <div class="selector-header">
+        <div class="stamp-selector-content">
+          <label class="selector-label">Выберите штамп:</label>
+          <div class="stamp-options">
+            @for (stampType of stampTypes; track stampType.id) {
+              <button
+                class="stamp-option"
+                [class.selected]="selectedStampType.id === stampType.id"
+                [class.image-stamp]="stampType.isCustomImage"
+                (click)="selectStampType(stampType)">
+                @if (stampType.isCustomImage && stampType.imageData) {
+                  <div class="stamp-preview image-preview">
+                    <img [src]="stampType.imageData" alt="stamp"/>
+                  </div>
+                }
+                <span class="stamp-label">{{ stampType.label }}</span>
+              </button>
+            }
+          </div>
+        </div>
+        <div class="header-controls">
+          <div class="size-control">
+            <label class="size-label">Размер:</label>
+            <button class="size-btn" (click)="decreaseStampSize()">-</button>
+            <input
+              type="range"
+              [min]="minStampSize"
+              [max]="maxStampSize"
+              [value]="currentStampSize"
+              (input)="updateStampSize(+$any($event.target).value)"
+              class="size-slider"/>
+            <button class="size-btn" (click)="increaseStampSize()">+</button>
+            <span class="size-value">{{ currentStampSize }}px</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="toolbar">
+      <div class="navigation">
+        <button (click)="previousPage()" class="secondary" [disabled]="currentPage === 1">
+          ← Пред.
+        </button>
+        <span class="page-info">
+          Страница {{ currentPage }} из {{ totalPages }}
+        </span>
+        <button (click)="nextPage()" class="secondary" [disabled]="currentPage === totalPages">
+          След. →
+        </button>
+      </div>
+
+      <div class="undo-redo-controls">
+        <button (click)="undo()" [disabled]="!canUndo()" class="secondary" title="Отменить (Ctrl+Z)">
+          ↶ Отменить
+        </button>
+        <button (click)="redo()" [disabled]="!canRedo()" class="secondary" title="Повторить (Ctrl+Y)">
+          ↷ Вернуть
+        </button>
+      </div>
+
+      <div class="stamp-controls">
+        <button (click)="clearStamps()" class="secondary">
+          Очистить штампы на странице
+        </button>
+        <button (click)="downloadPdfWithStamps()">
+          Скачать PDF со штампами
+        </button>
+      </div>
+    </div>
+
+    <div class="canvas-container">
+      <canvas #pdfCanvas class="pdf-canvas"></canvas>
+      <canvas
+        #stampCanvas
+        class="stamp-canvas"
+        (click)="onCanvasClick($event)"
+        (mousemove)="onCanvasMouseMove($event)"
+        (mouseenter)="onCanvasMouseEnter()"
+        (mouseleave)="onCanvasMouseLeave()">
+      </canvas>
+    </div>
+  }
+</div>

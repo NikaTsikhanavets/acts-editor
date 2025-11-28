@@ -1,14 +1,28 @@
 @if (!inProgress) {
-  <div class="drop-zone" appDrop (files)="importFile($event.file)">
-    <p>Перетащите файл сюда</p>
-    <p>или</p>
+  <div class="upload-container">
+    <div class="drop-zone" appDrop (files)="importFile($event.file)">
+      <h2>Сгенерировать документы</h2>
 
-    <div class="actions">
-      <label class="custom-file-upload">
-        <input type="file" (change)="uploadFile($event)" accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"/>
-        Загрузите файл
-      </label>
-      <button (click)="loadFileByUrl()">Загрузить файл по ссылке</button>
+      <p>Перетащите файл сюда</p>
+      <p>или</p>
+
+      <div class="actions">
+        <label class="custom-file-upload">
+          <input type="file" (change)="uploadFile($event)" accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"/>
+          Загрузите файл
+        </label>
+        <button (click)="loadFileByUrl()">Загрузить файл по ссылке</button>
+      </div>
+    </div>
+
+    <div class="drop-zone sign-documents">
+      <h2>Подписать документы</h2>
+      <div class="actions">
+        <label class="custom-file-upload pdf-upload">
+          <input type="file" (change)="uploadPdfOrImageFile($event)" accept="application/pdf,image/*"/>
+          Загрузите PDF или изображение
+        </label>
+      </div>
     </div>
   </div>
 } @else {
