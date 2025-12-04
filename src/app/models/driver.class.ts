@@ -4,6 +4,9 @@ import { ErrorInfo } from '../interfaces/error-info.interface';
 export class Driver {
   public firstName: string;
   public lastName: string;
+  public id: string;
+  public carMake: string;
+  public carNumber: string;
   public patronymic: string;
   public car: string;
   public manager: string;
@@ -15,7 +18,10 @@ export class Driver {
     this.firstName = driver[Column.FIRST_NAME]?.trim();
     this.lastName = driver[Column.LAST_NAME]?.trim();
     this.patronymic = driver[Column.PATRONYMIC]?.trim();
-    this.car = driver[Column.CAR];
+    this.id = driver[Column.ID]?.trim();
+    this.car = driver[Column.CAR]?.trim();
+    this.carMake = driver[Column.CAR_MAKE]?.trim();
+    this.carNumber = driver[Column.CAR_NUMBER]?.trim();
     this.manager = driver[Column.MANAGER];
   }
 

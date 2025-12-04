@@ -24,6 +24,13 @@
         </label>
       </div>
     </div>
+
+    <div class="drop-zone sign-documents">
+      <h2>Маршрутные листы</h2>
+      <div class="actions">
+        <button (click)="loadFileByUrl(true)">Сгенерировать маршрутный лист</button>
+      </div>
+    </div>
   </div>
 } @else {
   <app-loader/>

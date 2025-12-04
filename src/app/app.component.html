@@ -1,11 +1,15 @@
 <main class="main">
-  @if (!excelDocument && !pdfFile) {
-    <app-file-uploader 
-      (uploadedFile)="excelDocument = $event" 
-      (uploadedPdf)="pdfFile = $event"/>
+  @if (!excelDocument && !pdfFile && !driversExcelDocument()) {
+    <app-file-uploader
+      (uploadedFile)="excelDocument = $event"
+      (uploadedPdf)="pdfFile = $event"
+      (uploadedRouteSheetFile)="driversExcelDocument.set($event)"
+    />
   } @else if (excelDocument) {
     <app-drivers-list [uploadedDocument]="excelDocument" (goBack)="excelDocument = undefined"/>
   } @else if (pdfFile) {
     <app-pdf-viewer [pdfFile]="pdfFile" (goBack)="pdfFile = undefined"/>
+  } @else if (driversExcelDocument()) {
+    <app-route-sheet [uploadedDocument]="driversExcelDocument()" (goBack)="driversExcelDocument.set(null)"/>
   }
 </main>

@@ -6,7 +6,8 @@ import { saveAs } from 'file-saver';
 import { TemplateService } from './template.service';
 import { RequestInfo } from '@models';
 import { HttpClient } from "@angular/common/http";
-import { Observable, switchMap } from "rxjs";
+import { Observable } from "rxjs";
+import { map } from "rxjs/operators";
 
 @Injectable({
   providedIn: 'root'
@@ -106,13 +107,10 @@ export class DocumentService {
     return updatedDocument.files[this.xmlDocumentName];
   }
 
-  public getFile(): Observable<any> {
+  public getFile(): Observable<XLSX.WorkBook> {
     const key: string = '1n3HN_QPod2FMl0ctkINVRqt_kO4_TImvYdZH2Lkb8Ac';
-    return this.http.get(`https://docs.google.com/spreadsheet/ccc?key=${key}&output=xls`, { responseType: 'blob' as 'json'}).pipe(
-      switchMap((data: any) => {
-        const file = new File([data], 'myFile.xlsx', {type: data.type});
-        return this.importExcelFile(file);
-      })
+    return this.http.get(`https://docs.google.com/spreadsheet/ccc?key=${key}&output=xls`, { responseType: 'arraybuffer'}).pipe(
+      map((data: ArrayBuffer) => XLSX.read(data, {type: 'array'}))
     );
   }
 }

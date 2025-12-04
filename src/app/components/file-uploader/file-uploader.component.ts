@@ -20,6 +20,7 @@ export class FileUploaderComponent {
   public excelDocument!: XLSX.WorkBook;
   public inProgress: boolean = false;
   @Output() uploadedFile: EventEmitter<XLSX.WorkBook> = new EventEmitter<XLSX.WorkBook>();
+  @Output() uploadedRouteSheetFile: EventEmitter<XLSX.WorkBook> = new EventEmitter<XLSX.WorkBook>();
   @Output() uploadedPdf: EventEmitter<File> = new EventEmitter<File>();
 
   constructor(private readonly documentService: DocumentService) {
@@ -63,36 +64,36 @@ export class FileUploaderComponent {
   private async convertImageToPdf(imageFile: File): Promise<File> {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
-      
+
       reader.onload = (e) => {
         const img = new Image();
-        
+
         img.onload = () => {
           try {
             // Create PDF with image dimensions
             const imgWidth = img.width;
             const imgHeight = img.height;
-            
+
             // Calculate PDF page size (A4 or custom based on image)
             const maxWidth = 210; // A4 width in mm
             const maxHeight = 297; // A4 height in mm
-            
+
             let pdfWidth = maxWidth;
             let pdfHeight = (imgHeight * maxWidth) / imgWidth;
-            
+
             // If image is too tall, use full height and adjust width
             if (pdfHeight > maxHeight) {
               pdfHeight = maxHeight;
               pdfWidth = (imgWidth * maxHeight) / imgHeight;
             }
-            
+
             // Create PDF
             const pdf = new jsPDF({
               orientation: pdfWidth > pdfHeight ? 'landscape' : 'portrait',
               unit: 'mm',
               format: [pdfWidth, pdfHeight]
             });
-            
+
             // Add image to PDF
             pdf.addImage(
               e.target?.result as string,
@@ -102,7 +103,7 @@ export class FileUploaderComponent {
               pdfWidth,
               pdfHeight
             );
-            
+
             // Convert to File
             const pdfBlob = pdf.output('blob');
             const pdfFile = new File(
@@ -110,24 +111,24 @@ export class FileUploaderComponent {
               imageFile.name.replace(/\.(jpg|jpeg|png|gif|bmp|webp)$/i, '.pdf'),
               { type: 'application/pdf' }
             );
-            
+
             resolve(pdfFile);
           } catch (error) {
             reject(error);
           }
         };
-        
+
         img.onerror = () => {
           reject(new Error('Не удалось загрузить изображение'));
         };
-        
+
         img.src = e.target?.result as string;
       };
-      
+
       reader.onerror = () => {
         reject(new Error('Не удалось прочитать файл'));
       };
-      
+
       reader.readAsDataURL(imageFile);
     });
   }
@@ -143,17 +144,22 @@ export class FileUploaderComponent {
     });
   }
 
-  public loadFileByUrl(): void {
+  public loadFileByUrl(isRouteSheet?: boolean): void {
     this.inProgress = true;
 
     this.documentService.getFile().subscribe((excelDocument) => {
-      this.updateDocument(excelDocument);
+      this.updateDocument(excelDocument, isRouteSheet);
     });
   }
 
-  private updateDocument(excelDocument: XLSX.WorkBook): void {
+  private updateDocument(excelDocument: XLSX.WorkBook, isRouteSheet?: boolean): void {
     this.excelDocument = excelDocument;
     this.inProgress = false;
-    this.uploadedFile.emit(this.excelDocument);
+
+    if (isRouteSheet) {
+      this.uploadedRouteSheetFile.emit(this.excelDocument);
+    } else {
+      this.uploadedFile.emit(this.excelDocument);
+    }
   }
 }
