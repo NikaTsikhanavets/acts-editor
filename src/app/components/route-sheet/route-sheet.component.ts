@@ -6,10 +6,12 @@ import * as XLSX from 'xlsx';
 import * as ExcelJS from 'exceljs';
 import { Driver, Executor } from '@models';
 import { ExcelParserService } from '@services';
+import { ErrorInfo } from '../../interfaces/error-info.interface';
+import { ErrorsComponent } from '@components/errors/errors.component';
 
 @Component({
   selector: 'app-route-sheet',
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, ErrorsComponent],
   templateUrl: './route-sheet.component.html',
   styleUrl: './route-sheet.component.scss',
   standalone: true
@@ -22,6 +24,8 @@ export class RouteSheetComponent implements OnInit {
   managers: string[] = [];
   executors: Executor[] = [];
   routeSheetForm!: FormGroup;
+  parsingErrors: ErrorInfo[] = [];
+
 
   private parserService: ExcelParserService = inject(ExcelParserService);
   private fb: FormBuilder = inject(FormBuilder);
@@ -37,7 +41,7 @@ export class RouteSheetComponent implements OnInit {
     const {drivers, managers, clients, executors, errors} = this.parserService.parseDocument(this.uploadedDocument);
 
     if (errors?.length) {
-      // this.parsingErrors = errors || [];
+      this.parsingErrors = errors || [];
       return;
     }
 
@@ -49,7 +53,8 @@ export class RouteSheetComponent implements OnInit {
   private initForm(): void {
     this.routeSheetForm = this.fb.group({
       driver: [null, Validators.required],
-      executor: [null, Validators.required]
+      executor: [null, Validators.required],
+      monthOption: ['next', Validators.required]
     });
   }
 
@@ -60,11 +65,12 @@ export class RouteSheetComponent implements OnInit {
 
     const selectedDriver: Driver = this.routeSheetForm.value.driver;
     const selectedExecutor: Executor = this.routeSheetForm.value.executor;
+    const monthOption: 'current' | 'next' = this.routeSheetForm.value.monthOption;
 
-    this.generateRouteSheet(selectedDriver, selectedExecutor);
+    this.generateRouteSheet(selectedDriver, selectedExecutor, monthOption);
   }
 
-  private async generateRouteSheet(driver: Driver, executor: Executor): Promise<void> {
+  private async generateRouteSheet(driver: Driver, executor: Executor, monthOption: 'current' | 'next'): Promise<void> {
     const templatePath = '/assets/doc-templates/route-sheet.xlsx';
 
     this.http.get(templatePath, { responseType: 'arraybuffer' }).subscribe({
@@ -75,7 +81,7 @@ export class RouteSheetComponent implements OnInit {
 
           // Replace placeholders in all sheets
           workbook.eachSheet((worksheet) => {
-            this.replaceInWorksheet(worksheet, driver, executor);
+            this.replaceInWorksheet(worksheet, driver, executor, monthOption);
           });
 
           // Generate and download the file with all formatting preserved
@@ -97,10 +103,8 @@ export class RouteSheetComponent implements OnInit {
     });
   }
 
-  private replaceInWorksheet(worksheet: ExcelJS.Worksheet, driver: Driver, executor: Executor): void {
-    const currentMonth = this.getCurrentMonthInRussian();
-    const lastDay = this.getLastDayOfMonth();
-    const currentYear = new Date().getFullYear().toString();
+  private replaceInWorksheet(worksheet: ExcelJS.Worksheet, driver: Driver, executor: Executor, monthOption: 'current' | 'next'): void {
+    const { monthName, lastDay, year } = this.getMonthInfo(monthOption);
     const executorInfo = this.getExecutorInfo(executor);
 
     worksheet.eachRow((row) => {
@@ -110,13 +114,13 @@ export class RouteSheetComponent implements OnInit {
             cell.value = cell.value.replace(/\{\{DRIVER_NAME\}\}/g, driver.fullName);
           }
           if (cell.value.includes('{{MONTH}}')) {
-            cell.value = cell.value.replace(/\{\{MONTH\}\}/g, currentMonth);
+            cell.value = cell.value.replace(/\{\{MONTH\}\}/g, monthName);
           }
           if (cell.value.includes('{{LAST_DAY}}')) {
             cell.value = cell.value.replace(/\{\{LAST_DAY\}\}/g, lastDay.toString());
           }
           if (cell.value.includes('{{YEAR}}')) {
-            cell.value = cell.value.replace(/\{\{YEAR\}\}/g, currentYear);
+            cell.value = cell.value.replace(/\{\{YEAR\}\}/g, year);
           }
           if (cell.value.includes('{{EXECUTOR}}')) {
             cell.value = cell.value.replace(/\{\{EXECUTOR\}\}/g, executorInfo);
@@ -135,7 +139,7 @@ export class RouteSheetComponent implements OnInit {
     });
   }
 
-  private getCurrentMonthInRussian(): string {
+  private getMonthInfo(monthOption: 'current' | 'next'): { monthName: string; lastDay: number; year: string } {
     const months = [
       'Января',
       'Февраля',
@@ -151,14 +155,25 @@ export class RouteSheetComponent implements OnInit {
       'Декабря'
     ];
 
-    const currentMonthIndex = new Date().getMonth();
-    return months[currentMonthIndex];
-  }
-
-  private getLastDayOfMonth(): number {
     const now = new Date();
-    const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-    return lastDay.getDate();
+    let monthIndex = now.getMonth();
+    let year = now.getFullYear();
+
+    if (monthOption === 'next') {
+      monthIndex += 1;
+      if (monthIndex > 11) {
+        monthIndex = 0;
+        year += 1;
+      }
+    }
+
+    const lastDayDate = new Date(year, monthIndex + 1, 0);
+
+    return {
+      monthName: months[monthIndex],
+      lastDay: lastDayDate.getDate(),
+      year: year.toString()
+    };
   }
 
   private getExecutorInfo(executor: Executor): string {

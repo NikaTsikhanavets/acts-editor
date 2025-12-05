@@ -1,40 +1,64 @@
-<div class="route-sheet-container">
-  <h2>Создать маршрутный лист</h2>
-
-  <form [formGroup]="routeSheetForm" (ngSubmit)="onSubmit()" class="route-sheet-form">
-    <div class="form-group">
-      <label for="driver">Выберите водителя:</label>
-      <select id="driver" formControlName="driver" class="form-control">
-        <option [value]="null" disabled>-- Выберите водителя --</option>
-        <option *ngFor="let driver of drivers" [ngValue]="driver">
-          {{ driver.shortName }} ({{ driver.car }})
-        </option>
-      </select>
-      <div *ngIf="routeSheetForm.get('driver')?.invalid && routeSheetForm.get('driver')?.touched" class="error">
-        Пожалуйста, выберите водителя
-      </div>
-    </div>
-
-    <div class="form-group">
-      <label for="executor">Выберите исполнителя:</label>
-      <select id="executor" formControlName="executor" class="form-control">
-        <option [value]="null" disabled>-- Выберите исполнителя --</option>
-        <option *ngFor="let executor of executors" [ngValue]="executor">
-          {{ executor.name }}
-        </option>
-      </select>
-      <div *ngIf="routeSheetForm.get('executor')?.invalid && routeSheetForm.get('executor')?.touched" class="error">
-        Пожалуйста, выберите исполнителя
-      </div>
-    </div>
-
-    <div class="button-group">
-      <button type="button" (click)="return()" class="secondary">
-        Назад
-      </button>
-      <button type="submit" [disabled]="routeSheetForm.invalid">
-        Создать
-      </button>
-    </div>
-  </form>
+@if (parsingErrors.length) {
+<div class="error">
+  <app-errors [errors]="parsingErrors"
+              (return)="return()">
+  </app-errors>
 </div>
+} @else {
+  <div class="route-sheet-container">
+    <h2>Создать маршрутный лист</h2>
+
+    <form [formGroup]="routeSheetForm" (ngSubmit)="onSubmit()" class="route-sheet-form">
+      <div class="form-group">
+        <label for="driver">Выберите водителя:</label>
+        <select id="driver" formControlName="driver" class="form-control">
+          <option [value]="null" disabled>-- Выберите водителя --</option>
+          <option *ngFor="let driver of drivers" [ngValue]="driver">
+            {{ driver.shortName }} ({{ driver.car }})
+          </option>
+        </select>
+        <div *ngIf="routeSheetForm.get('driver')?.invalid && routeSheetForm.get('driver')?.touched" class="error">
+          Пожалуйста, выберите водителя
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="executor">Выберите исполнителя:</label>
+        <select id="executor" formControlName="executor" class="form-control">
+          <option [value]="null" disabled>-- Выберите исполнителя --</option>
+          <option *ngFor="let executor of executors" [ngValue]="executor">
+            {{ executor.name }}
+          </option>
+        </select>
+        <div *ngIf="routeSheetForm.get('executor')?.invalid && routeSheetForm.get('executor')?.touched" class="error">
+          Пожалуйста, выберите исполнителя
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Выберите месяц:</label>
+        <div class="radio-group">
+          <label>
+            <input type="radio" formControlName="monthOption" value="current" />
+            Текущий месяц
+          </label>
+          <label>
+            <input type="radio" formControlName="monthOption" value="next" />
+            Следующий месяц
+          </label>
+        </div>
+      </div>
+
+      <div class="button-group">
+        <button type="button" (click)="return()" class="secondary">
+          Назад
+        </button>
+        <button type="submit" [disabled]="routeSheetForm.invalid">
+          Создать
+        </button>
+      </div>
+    </form>
+  </div>
+
+}
+
