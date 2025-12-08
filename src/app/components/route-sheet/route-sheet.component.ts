@@ -1,9 +1,10 @@
-import { Component, EventEmitter, inject, Input, OnInit, Output } from '@angular/core';
+import { Component, EventEmitter, inject, Input, OnInit, Output, signal, WritableSignal } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import * as XLSX from 'xlsx';
 import * as ExcelJS from 'exceljs';
+import JSZip from 'jszip';
 import { Driver, Executor } from '@models';
 import { ExcelParserService } from '@services';
 import { ErrorInfo } from '../../interfaces/error-info.interface';
@@ -21,6 +22,8 @@ export class RouteSheetComponent implements OnInit {
   @Output() goBack: EventEmitter<void> = new EventEmitter<void>();
 
   drivers: Driver[] = [];
+  selectedDrivers: Set<Driver> = new Set();
+  isTouchedDriversList: WritableSignal<boolean> = signal(false);
   managers: string[] = [];
   executors: Executor[] = [];
   routeSheetForm!: FormGroup;
@@ -52,10 +55,24 @@ export class RouteSheetComponent implements OnInit {
 
   private initForm(): void {
     this.routeSheetForm = this.fb.group({
-      driver: [null, Validators.required],
       executor: [null, Validators.required],
       monthOption: ['next', Validators.required]
     });
+  }
+
+  public toggleDriver(driver: Driver, event: Event): void {
+    const checked = (event.target as HTMLInputElement).checked;
+    if (checked) {
+      this.selectedDrivers.add(driver);
+    } else {
+      this.selectedDrivers.delete(driver);
+    }
+
+    this.isTouchedDriversList.set(true);
+  }
+
+  public isDriverSelected(driver: Driver): boolean {
+    return this.selectedDrivers.has(driver);
   }
 
   public onSubmit(): void {
@@ -63,36 +80,49 @@ export class RouteSheetComponent implements OnInit {
       return;
     }
 
-    const selectedDriver: Driver = this.routeSheetForm.value.driver;
+    if (this.selectedDrivers.size === 0) {
+      return;
+    }
+
+    const selectedDriversArray: Driver[] = Array.from(this.selectedDrivers);
     const selectedExecutor: Executor = this.routeSheetForm.value.executor;
     const monthOption: 'current' | 'next' = this.routeSheetForm.value.monthOption;
 
-    this.generateRouteSheet(selectedDriver, selectedExecutor, monthOption);
+    if (selectedDriversArray.length === 1) {
+      this.generateSingleRouteSheet(selectedDriversArray[0], selectedExecutor, monthOption);
+    } else {
+      this.generateRouteSheetsZip(selectedDriversArray, selectedExecutor, monthOption);
+    }
   }
 
-  private async generateRouteSheet(driver: Driver, executor: Executor, monthOption: 'current' | 'next'): Promise<void> {
+  private async generateSingleRouteSheet(driver: Driver, executor: Executor, monthOption: 'current' | 'next'): Promise<void> {
+    this.loadTemplate(async (templateData) => {
+      const buffer = await this.createRouteSheetBuffer(templateData, driver, executor, monthOption);
+      this.downloadFile(buffer, `маршрутный_лист_${driver.shortName}.xlsx`);
+    });
+  }
+
+  private async generateRouteSheetsZip(drivers: Driver[], executor: Executor, monthOption: 'current' | 'next'): Promise<void> {
+    this.loadTemplate(async (templateData) => {
+      const zip = new JSZip();
+
+      for (const driver of drivers) {
+        const buffer = await this.createRouteSheetBuffer(templateData, driver, executor, monthOption);
+        zip.file(`маршрутный_лист_${driver.shortName}.xlsx`, buffer);
+      }
+
+      const zipBlob = await zip.generateAsync({ type: 'blob' });
+      this.downloadFile(zipBlob, `маршрутные_листы_${this.getMonthInfo(monthOption).monthName}.zip`);
+    });
+  }
+
+  private loadTemplate(callback: (data: ArrayBuffer) => Promise<void>): void {
     const templatePath = '/assets/doc-templates/route-sheet.xlsx';
 
     this.http.get(templatePath, { responseType: 'arraybuffer' }).subscribe({
       next: async (data: ArrayBuffer) => {
         try {
-          const workbook = new ExcelJS.Workbook();
-          await workbook.xlsx.load(data);
-
-          // Replace placeholders in all sheets
-          workbook.eachSheet((worksheet) => {
-            this.replaceInWorksheet(worksheet, driver, executor, monthOption);
-          });
-
-          // Generate and download the file with all formatting preserved
-          const buffer = await workbook.xlsx.writeBuffer();
-          const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-          const url = window.URL.createObjectURL(blob);
-          const link = document.createElement('a');
-          link.href = url;
-          link.download = `маршрутный_лист_${driver.shortName}.xlsx`;
-          link.click();
-          window.URL.revokeObjectURL(url);
+          await callback(data);
         } catch (error) {
           console.error('Error processing template:', error);
         }
@@ -101,6 +131,32 @@ export class RouteSheetComponent implements OnInit {
         console.error('Error loading template:', error);
       }
     });
+  }
+
+  private async createRouteSheetBuffer(
+    templateData: ArrayBuffer,
+    driver: Driver,
+    executor: Executor,
+    monthOption: 'current' | 'next'
+  ): Promise<ExcelJS.Buffer> {
+    const workbook = new ExcelJS.Workbook();
+    await workbook.xlsx.load(templateData);
+
+    workbook.eachSheet((worksheet) => {
+      this.replaceInWorksheet(worksheet, driver, executor, monthOption);
+    });
+
+    return await workbook.xlsx.writeBuffer();
+  }
+
+  private downloadFile(data: Blob | ExcelJS.Buffer, filename: string): void {
+    const blob = data instanceof Blob ? data : new Blob([data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    link.click();
+    window.URL.revokeObjectURL(url);
   }
 
   private replaceInWorksheet(worksheet: ExcelJS.Worksheet, driver: Driver, executor: Executor, monthOption: 'current' | 'next'): void {

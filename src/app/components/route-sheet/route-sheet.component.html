@@ -1,5 +1,5 @@
 @if (parsingErrors.length) {
-<div class="error">
+<div class="error-wrapper">
   <app-errors [errors]="parsingErrors"
               (return)="return()">
   </app-errors>
@@ -10,16 +10,22 @@
 
     <form [formGroup]="routeSheetForm" (ngSubmit)="onSubmit()" class="route-sheet-form">
       <div class="form-group">
-        <label for="driver">Выберите водителя:</label>
-        <select id="driver" formControlName="driver" class="form-control">
-          <option [value]="null" disabled>-- Выберите водителя --</option>
-          <option *ngFor="let driver of drivers" [ngValue]="driver">
-            {{ driver.shortName }} ({{ driver.car }})
-          </option>
-        </select>
-        <div *ngIf="routeSheetForm.get('driver')?.invalid && routeSheetForm.get('driver')?.touched" class="error">
-          Пожалуйста, выберите водителя
+        <label>Выберите водителей:</label>
+        <div class="drivers-list">
+          <label *ngFor="let driver of drivers" class="driver-checkbox">
+            <input
+              type="checkbox"
+              [checked]="isDriverSelected(driver)"
+              (change)="toggleDriver(driver, $event)"
+            />
+            <span>{{ driver.shortName }} ({{ driver.car }})</span>
+          </label>
         </div>
+        @if (!selectedDrivers.size && isTouchedDriversList()) {
+          <div class="error">
+            Пожалуйста, выберите хотя бы одного водителя
+          </div>
+        }
       </div>
 
       <div class="form-group">
