@@ -18,7 +18,7 @@ export class Driver {
     this.firstName = driver[Column.FIRST_NAME]?.trim();
     this.lastName = driver[Column.LAST_NAME]?.trim();
     this.patronymic = driver[Column.PATRONYMIC]?.trim();
-    this.id = driver[Column.ID]?.trim();
+    this.id = driver[Column.ID]?.toString()?.trim();
     this.car = driver[Column.CAR]?.trim();
     this.carMake = driver[Column.CAR_MAKE]?.trim();
     this.carNumber = driver[Column.CAR_NUMBER]?.trim();
