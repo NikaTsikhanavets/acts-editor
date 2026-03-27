@@ -58,7 +58,8 @@ export class PdfViewerComponent implements OnInit {
     { id: 'alpha-trans', filename: 'alpha-trans.png', label: 'Альфа Транс' },
     { id: 'asia-motors', filename: 'asia-motors.png', label: 'Азия Моторс' },
     { id: 'logic-capital', filename: 'logic-capital.png', label: 'Логистика Столицы' },
-    { id: 'pronkin', filename: 'pronkin.png', label: 'ИП Пронькин' }
+    { id: 'pronkin', filename: 'pronkin.png', label: 'ИП Пронькин' },
+    { id: 'specnovotrans', filename: 'specnovotrans.png', label: 'Спецновотранс' },
   ];
 
   constructor(private cdr: ChangeDetectorRef) {
