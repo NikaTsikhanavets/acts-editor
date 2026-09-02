@@ -59,6 +59,7 @@ export class PdfViewerComponent implements OnInit {
     { id: 'asia-motors', filename: 'asia-motors.png', label: 'Азия Моторс' },
     { id: 'logic-capital', filename: 'logic-capital.png', label: 'Логистика Столицы' },
     { id: 'pronkin', filename: 'pronkin.png', label: 'ИП Пронькин' },
+    { id: 'pronkina-a', filename: 'pronkina_a_a.png', label: 'ИП Пронькина А.А.' },
     { id: 'specnovotrans', filename: 'specnovotrans.png', label: 'Спецновотранс' },
   ];
 
