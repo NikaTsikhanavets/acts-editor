@@ -1,0 +1,51 @@
+# Выкладка на свой сервер (FirstVDS, Москва) при пуше в master: сборка здесь, в GitHub,
+# готовые файлы уезжают на сервер по rsync. Сервер ничего не скачивает и не собирает.
+# Адрес: https://transports.website
+# Секрет SSH_KEY — приватный ключ пользователя sites на сервере (не root).
+# nginx и сертификат настраиваются в репозитории transport-back- (deploy/nginx/sites/transports.website.conf).
+name: Deploy
+
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
+env:
+  SERVER: 155.212.171.135
+  # Отпечаток ключа сервера: подключаемся только к нему
+  SERVER_HOST_KEY: 155.212.171.135 ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIInynRKl7cgkTyBNxX0tfrEDkLBMfDwoudq8hxCWnAEG
+  SITE_DIR: /var/www/sites/acts-editor
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.12.0
+          cache: npm
+
+      - run: npm ci
+
+      - run: npm run build
+
+      - name: SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_KEY }}" > ~/.ssh/id_ci
+          chmod 600 ~/.ssh/id_ci
+          echo "$SERVER_HOST_KEY" >> ~/.ssh/known_hosts
+
+      # Сначала во временную папку, потом подмена — сайт не отдаёт полузалитую сборку
+      - name: Upload
+        run: rsync -az --delete -e "ssh -i ~/.ssh/id_ci" dist/acts-editor/browser/ "sites@$SERVER:$SITE_DIR/dist.new/"
+
+      - name: Switch
+        run: |
+          ssh -i ~/.ssh/id_ci "sites@$SERVER" "cd $SITE_DIR && mkdir -p dist && rsync -a --delete dist.new/ dist/ && rm -rf dist.new && echo \"[site] OK: \$(grep -o 'main-[A-Z0-9]*\.js' dist/index.html)\""
